@@ -1,10 +1,10 @@
 cmake_minimum_required(VERSION 3.1)
 
 
-project(test)
+project(shaders)
 
 set(SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
-set(SOURCES "${SRC_DIR}/test.c")
+set(SOURCES "${SRC_DIR}/shaders.c")
 
 add_executable(${PROJECT_NAME} ${SOURCES})
 

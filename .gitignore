@@ -1,5 +1,6 @@
 # Project specific:
-test
+hello_triangle
+shaders
 .clangd
 
 # Vim
