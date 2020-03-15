@@ -16,12 +16,19 @@ const char* vertexShaderSource = "#version 330 core\n"
                                  "}\0";
 
 // Fragment shader in GLSL
-const char* fragmentShaderSource = "#version 330 core\n"
-                                   "out vec4 FragColor;\n"
-                                   "void main()\n"
-                                   "{\n"
-                                   "    FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
-                                   "}\0";
+const char* firstFragmentShaderSource = "#version 330 core\n"
+                                        "out vec4 FragColor;\n"
+                                        "void main()\n"
+                                        "{\n"
+                                        "    FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
+                                        "}\0";
+
+const char* secondFragmentShaderSource = "#version 330 core\n"
+                                         "out vec4 FragColor;\n"
+                                         "void main()\n"
+                                         "{\n"
+                                         "    FragColor = vec4(1.0f, 1.0f, 0.1f, 1.0f);\n"
+                                         "}\0";
 
 // Callback from GLFW that the window was resized
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
@@ -108,7 +115,7 @@ unsigned int createVertexShader()
     }
     return vertexShader;
 }
-unsigned int createFragmentShader()
+unsigned int createFragmentShader(const char* fragmentShaderSource)
 {
     // Get fragment shader id
     unsigned int fragmentShader;
@@ -146,7 +153,6 @@ unsigned int createShaderProgram(unsigned int vertexShader,
     }
 
     // Delete shaders (they are now linked into the shader program)
-    glDeleteShader(vertexShader);
     glDeleteShader(fragmentShader);
     return shaderProgram;
 }
@@ -186,10 +192,16 @@ int main(void)
 
     unsigned int vertexShader = createVertexShader();
 
-    unsigned int fragmentShader = createFragmentShader();
+    unsigned int firstFragmentShader = createFragmentShader(firstFragmentShaderSource);
 
-    unsigned int shaderProgram = createShaderProgram(vertexShader,
-        fragmentShader);
+    unsigned int firstShaderProgram = createShaderProgram(vertexShader,
+        firstFragmentShader);
+
+    unsigned int secondFragmentShader = createFragmentShader(secondFragmentShaderSource);
+    unsigned int secondShaderProgram = createShaderProgram(vertexShader,
+        secondFragmentShader);
+
+    glDeleteShader(vertexShader);
 
     // Render loop:
     while (!glfwWindowShouldClose(window)) {
@@ -198,13 +210,15 @@ int main(void)
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        glUseProgram(shaderProgram);
+        glUseProgram(firstShaderProgram);
 
         glBindVertexArray(firstVAO);
         glDrawArrays(GL_TRIANGLES, 0, 3);
 
         glBindVertexArray(secondVAO);
         glDrawArrays(GL_TRIANGLES, 0, 3);
+
+        glUseProgram(secondShaderProgram);
 
         glBindVertexArray(thirdVAO);
         glDrawArrays(GL_TRIANGLES, 0, 3);
