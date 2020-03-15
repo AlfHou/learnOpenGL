@@ -64,9 +64,15 @@ int main(void)
 
     // Set up vertices for triangle
     float vertices[] = {
-        -0.5f, -0.5f, 0.0f,
-        0.5f, -0.5f, 0.0,
-        0.0f, 0.5f, 0.0f
+        0.5f, 0.5f, 0.0f,   // Top right
+        0.5f, -0.5f, 0.0,   // Bottom right
+        -0.5f, -0.5f, 0.0f, // Bottom left
+        -0.5f, 0.5f, 0.0f   // Top left
+    };
+
+    unsigned int indices[] = {
+        0, 1, 3, // First triangle
+        1, 2, 3  // Second triangle
     };
 
     // Create Vertex Array Object
@@ -84,6 +90,13 @@ int main(void)
 
     // Copy vertices to GPU memory
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+    // Use indices to draw two triangles = rectangle
+    unsigned int EBO;
+    glGenBuffers(1, &EBO);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
     // Get vertex shader ID
     unsigned int vertexShader;
@@ -146,8 +159,11 @@ int main(void)
         glClear(GL_COLOR_BUFFER_BIT);
 
         glUseProgram(shaderProgram);
+
         glBindVertexArray(VAO);
-        glDrawArrays(GL_TRIANGLES, 0, 3);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+        glBindVertexArray(0);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
