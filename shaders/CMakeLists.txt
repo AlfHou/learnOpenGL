@@ -1,17 +1,15 @@
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 3.3)
 
 
-project(shaders)
-
-set(SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
-set(SOURCES "${SRC_DIR}/shaders.c")
-
-add_executable(${PROJECT_NAME} ${SOURCES})
+project(main)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-set(LIB_DIR "${CMAKE_CURRENT_SOURCE_DIR}/Dependencies")
+set(SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
+set(SOURCE "${SRC_DIR}/main.c")
+add_executable(${PROJECT_NAME} "${SRC_DIR}/main.c")
 
+set(LIB_DIR "${CMAKE_CURRENT_SOURCE_DIR}/Dependencies")
 
 
 # GLFW
@@ -22,14 +20,21 @@ set(GLFW_BUILD_DOCS OFF CACHE INTERNAL "Build the GLFW documentation")
 set(GLFW_INSTALL OFF CACHE INTERNAL "Generate installation target")
 target_link_libraries(${PROJECT_NAME} "glfw" "${GLFW_LIBRARIES}")
 target_include_directories(${PROJECT_NAME} PRIVATE "${GLFW_DIR}/include")
-
 add_subdirectory("${GLFW_DIR}")
+
 
 # glad
 set(GLAD_DIR "${LIB_DIR}/glad")
 add_library("glad" "${GLAD_DIR}/src/glad.c")
 target_include_directories("glad" PRIVATE "${GLAD_DIR}/include")
-target_include_directories(${PROJECT_NAME} PRIVATE "${GLAD_DIR}/include")
-target_link_libraries(${PROJECT_NAME} "glad" ${CMAKE_DL_LIBS})
+
+target_include_directories(${PROJECT_NAME} PUBLIC "${GLAD_DIR}/include")
+target_link_libraries(${PROJECT_NAME} glad ${CMAKE_DL_LIBS})
+
+
+# Shader
+add_library("shader" STATIC "${SRC_DIR}/shader.c")
+target_include_directories("shader" PUBLIC "${GLAD_DIR}/include")
+target_link_libraries(${PROJECT_NAME} "shader")
 
 
