@@ -11,4 +11,8 @@ struct shader {
 void shaderInit(struct shader* instance, const char* vertexPath,
     const char* fragmentPath);
 
+/* Set uniform 'uniformName' in shader 's' to value 'value'
+ */
+void setFloat(struct shader* const s, char* const uniformName, float value);
+
 #endif

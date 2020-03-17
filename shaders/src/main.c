@@ -12,6 +12,7 @@
 // Callback from GLFW that the window was resized
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
+    (void)window;
     glViewport(0, 0, width, height);
 }
 
@@ -24,12 +25,14 @@ void processInput(GLFWwindow* window)
 GLFWwindow* setupWindow()
 {
     glfwInit();
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
 
-    GLFWwindow* window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Learning OpenGL all day", NULL, NULL);
+    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+    GLFWwindow* window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT,
+        "Learning OpenGL all day", NULL, NULL);
     if (window == NULL) {
         printf("Failed to create GLFW window\n");
         glfwTerminate();
@@ -37,15 +40,13 @@ GLFWwindow* setupWindow()
     }
 
     glfwMakeContextCurrent(window);
+    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
         printf("Failed to initialize GLAD\n");
         return NULL;
     }
 
-    glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
-
-    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     return window;
 }
 unsigned int createTriangle(float* vertices, unsigned long sizeVertices)
@@ -108,6 +109,7 @@ int main(void)
         glClear(GL_COLOR_BUFFER_BIT);
 
         glUseProgram(s.ID);
+        setFloat(&s, "xOffset", 0.8);
 
         glBindVertexArray(VAO);
         glDrawArrays(GL_TRIANGLES, 0, 3);
@@ -117,6 +119,7 @@ int main(void)
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
+    glDeleteVertexArrays(1, &VAO);
     glfwTerminate();
     return 0;
 }

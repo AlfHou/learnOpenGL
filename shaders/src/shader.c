@@ -81,6 +81,11 @@ unsigned int createShaderProgram(unsigned int vertexShaderId,
     return shaderProgram;
 }
 
+void setFloat(struct shader* const s, char* const uniformName, float value)
+{
+    glUniform1f(glGetUniformLocation(s->ID, uniformName), value);
+}
+
 void shaderInit(struct shader* instance, const char* vertexPath,
     const char* fragmentPath)
 {
