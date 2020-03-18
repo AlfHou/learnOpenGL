@@ -20,10 +20,25 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
     glViewport(0, 0, width, height);
 }
 
-void processInput(GLFWwindow* window)
+void processInput(GLFWwindow* window, float* sampleRatio,
+    struct shader* const s)
 {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
         glfwSetWindowShouldClose(window, true);
+    }
+    if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
+        if (*sampleRatio < 1.0) {
+            *sampleRatio = *sampleRatio + 0.01;
+            glUniform1f(glGetUniformLocation(s->ID, "sampleRatio"),
+                *sampleRatio);
+        }
+    }
+    if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
+        if (*sampleRatio > 0) {
+            *sampleRatio = *sampleRatio - 0.01;
+            glUniform1f(glGetUniformLocation(s->ID, "sampleRatio"),
+                *sampleRatio);
+        }
     }
 }
 GLFWwindow* setupWindow()
@@ -93,12 +108,15 @@ unsigned int createShape(float* vertices, unsigned long sizeVertices,
 
     return VAO;
 }
-unsigned int createTexture(unsigned int VAO)
+unsigned int createTexture(unsigned int VAO, char* const image_path,
+    GLint imageFormat)
 {
+    stbi_set_flip_vertically_on_load(true);
+
     int width;
     int height;
     int nrChannels;
-    unsigned char* data = stbi_load("../src/container.jpg", &width, &height,
+    unsigned char* data = stbi_load(image_path, &width, &height,
         &nrChannels, 0);
     if (data == NULL) {
         fprintf(stderr, "Failed to load texture\n");
@@ -111,7 +129,7 @@ unsigned int createTexture(unsigned int VAO)
     glGenTextures(1, &texture);
     glBindTexture(GL_TEXTURE_2D, texture);
 
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB,
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, imageFormat,
         GL_UNSIGNED_BYTE, data);
     glGenerateMipmap(GL_TEXTURE_2D);
 
@@ -133,10 +151,10 @@ int main(void)
     // Set up vertices for first triangle
     float vertices[] = {
         // positions        // color    // texture cords
-        0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f,  // top right
-        0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, // bottom right
+        0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 2.0f, 2.0f,  // top right
+        0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 2.0f, 0.0f, // bottom right
         -0.5f, -0.5, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, // bottom left
-        -0.5, 0.5, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f    // top left
+        -0.5, 0.5, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 2.0f    // top left
     };
     unsigned int indices[] = {
         0, 1, 2, // First triangle
@@ -146,8 +164,16 @@ int main(void)
     unsigned int VAO
         = createShape(vertices, sizeof(vertices), indices, sizeof(indices));
 
-    unsigned int texture = createTexture(VAO);
-    if (texture == 0) {
+    unsigned int texture1 = createTexture(VAO, "../src/container.jpg", GL_RGB);
+    if (texture1 == 0) {
+        glDeleteVertexArrays(1, &VAO);
+        glfwTerminate();
+        return 1;
+    }
+
+    unsigned int texture2 = createTexture(VAO, "../src/awesomeface.png",
+        GL_RGBA);
+    if (texture1 == 0) {
         glDeleteVertexArrays(1, &VAO);
         glfwTerminate();
         return 1;
@@ -157,16 +183,24 @@ int main(void)
     shaderInit(&s, "../src/shader.vs", "../src/shader.fs");
 
     glBindVertexArray(0);
+    glUseProgram(s.ID);
+    glUniform1i(glGetUniformLocation(s.ID, "texture1"), 0);
+    glUniform1i(glGetUniformLocation(s.ID, "texture2"), 1);
+    float sampleRatio = 0.5;
+    glUniform1f(glGetUniformLocation(s.ID, "sampleRatio"), sampleRatio);
     // Render loop:
     while (!glfwWindowShouldClose(window)) {
-        processInput(window);
+        processInput(window, &sampleRatio, &s);
 
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        glUseProgram(s.ID);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, texture1);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, texture2);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
 
-        glBindTexture(GL_TEXTURE_2D, texture);
         glBindVertexArray(VAO);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
