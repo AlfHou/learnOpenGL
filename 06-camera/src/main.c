@@ -24,7 +24,8 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 }
 
 void processInput(GLFWwindow* window, float* sampleRatio,
-    struct shader* const s)
+    struct shader* const s, vec3* camera_position, vec3 camera_front,
+    vec3 camera_up)
 {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
         glfwSetWindowShouldClose(window, true);
@@ -42,6 +43,42 @@ void processInput(GLFWwindow* window, float* sampleRatio,
             glUniform1f(glGetUniformLocation(s->ID, "sampleRatio"),
                 *sampleRatio);
         }
+    }
+    // Controll camera
+    const float camera_speed = 0.1f;
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+        vec3 speed_camera_front;
+        glm_vec3_scale(camera_front, camera_speed, speed_camera_front);
+
+        glm_vec3_add(*camera_position, speed_camera_front, *camera_position);
+    }
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+        vec3 speed_camera_front;
+        glm_vec3_scale(camera_front, camera_speed, speed_camera_front);
+
+        glm_vec3_sub(*camera_position, speed_camera_front, *camera_position);
+    }
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
+        // Get camera right
+        vec3 camera_right;
+        glm_vec3_cross(camera_front, camera_up, camera_right);
+        glm_normalize(camera_right);
+
+        vec3 speed_camera_front;
+        glm_vec3_scale(camera_right, camera_speed, speed_camera_front);
+
+        glm_vec3_sub(*camera_position, speed_camera_front, *camera_position);
+    }
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
+        // Get camera right
+        vec3 camera_right;
+        glm_vec3_cross(camera_front, camera_up, camera_right);
+        glm_normalize(camera_right);
+
+        vec3 speed_camera_front;
+        glm_vec3_scale(camera_right, camera_speed, speed_camera_front);
+
+        glm_vec3_add(*camera_position, speed_camera_front, *camera_position);
     }
 }
 GLFWwindow* setupWindow()
@@ -130,7 +167,8 @@ unsigned int createTexture(unsigned int VAO, char* const image_path,
     stbi_image_free(data);
     return texture;
 }
-void project_3d(struct shader const* s, vec3 position, bool rotate)
+void project_3d(struct shader const* s, vec3 position, bool rotate,
+    vec3 camera_position, vec3 camera_front, vec3 camera_up)
 {
     // Time to go 3D, ya heard?
     mat4 model = GLM_MAT4_IDENTITY_INIT;
@@ -140,9 +178,12 @@ void project_3d(struct shader const* s, vec3 position, bool rotate)
         glm_rotate(model, (float)glfwGetTime() * glm_rad(50.0f), rotate_vector);
     }
 
-    mat4 view = GLM_MAT4_IDENTITY_INIT;
-    vec3 translate_vector = { 0.0f, 0.0f, -3.0f };
-    glm_translate(view, translate_vector);
+    // Camera shit
+    vec3 dir;
+    glm_vec3_add(camera_position, camera_front, dir);
+
+    mat4 view;
+    glm_lookat(camera_position, dir, camera_up, view);
 
     mat4 projection;
     glm_perspective(glm_rad(45.0f), 800.0f / 600.0f, 0.1f, 100.0f, projection);
@@ -252,9 +293,15 @@ int main(void)
 
     glEnable(GL_DEPTH_TEST);
 
+    // Sent to camera in first iteration
+    vec3 camera_position = { 0.0f, 0.0f, 3.0f };
+    vec3 camera_front = { 0.0f, 0.0f, -1.0f };
+    vec3 camera_up = GLM_YUP;
+
     // Render loop:
     while (!glfwWindowShouldClose(window)) {
-        processInput(window, &sampleRatio, &s);
+        processInput(window, &sampleRatio, &s, &camera_position, camera_front,
+            camera_up);
 
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -268,7 +315,8 @@ int main(void)
         glBindVertexArray(VAO);
         for (int i = 0; i < NUM_CUBES; i++) {
             bool rotate = i % 3 == 0;
-            project_3d(&s, cube_positions[i], rotate);
+            project_3d(&s, cube_positions[i], rotate, camera_position, camera_front,
+                camera_up);
             glDrawArrays(GL_TRIANGLES, 0, 36);
         }
 
