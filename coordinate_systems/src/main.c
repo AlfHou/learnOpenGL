@@ -268,8 +268,6 @@ int main(void)
         glBindVertexArray(VAO);
         for (int i = 0; i < NUM_CUBES; i++) {
             bool rotate = i % 3 == 0;
-            printf("i: %d, rotate %d\n", i, rotate);
-
             project_3d(&s, cube_positions[i], rotate);
             glDrawArrays(GL_TRIANGLES, 0, 36);
         }

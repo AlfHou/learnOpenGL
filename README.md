@@ -25,4 +25,10 @@ the binary created for hello_triangle would be `hello_triangle`.
 
 ## Slick screenshots
 
+### Simple Triangle
+
 ![Shader.c](https://user-images.githubusercontent.com/20001253/76971161-1d0c1f80-692d-11ea-9b64-204152960fda.png)
+
+### 3D cubes
+
+![coordniate_system](https://user-images.githubusercontent.com/20001253/77314508-0f2c1500-6d06-11ea-8a6e-ab21c734f77c.png)
