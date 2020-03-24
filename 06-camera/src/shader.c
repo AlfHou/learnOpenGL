@@ -1,6 +1,8 @@
-#include "shader.h"
+#include <cglm/cglm.h>
 #include <stdio.h>
 #include <stdlib.h>
+
+#include "shader.h"
 
 /* Read shader from file. Returns char* to string version of
  * the shader. Needs to be freed when no longer in use. Returns null on error.
@@ -81,15 +83,20 @@ unsigned int createShaderProgram(unsigned int vertexShaderId,
     return shaderProgram;
 }
 
-void setFloat(struct shader* const s, char* const uniformName, float value)
+void shader_set_float(struct shader* const s, char* const uniformName, float value)
 {
     glUniform1f(glGetUniformLocation(s->ID, uniformName), value);
 }
-
-void shaderInit(struct shader* instance, const char* vertexPath,
-    const char* fragmentPath)
+void shader_set_mat4(struct shader* const s, char* const uniform_name, mat4 val)
 {
-    char* vertexShaderBuffer = readShader(vertexPath);
+    int uniform_loc = glGetUniformLocation(s->ID, uniform_name);
+    glUniformMatrix4fv(uniform_loc, 1, GL_FALSE, (float*)val);
+}
+
+void shader_init(struct shader* instance, const char* vertex_path,
+    const char* fragment_path)
+{
+    char* vertexShaderBuffer = readShader(vertex_path);
     if (vertexShaderBuffer == NULL) {
         return;
     }
@@ -99,7 +106,7 @@ void shaderInit(struct shader* instance, const char* vertexPath,
     free(vertexShaderBuffer);
 
     // Create fragment shader
-    char* fragmentShaderBuffer = readShader(fragmentPath);
+    char* fragmentShaderBuffer = readShader(fragment_path);
     if (fragmentShaderBuffer == NULL) {
         glDeleteShader(vertexShaderId);
         return;

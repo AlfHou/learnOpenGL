@@ -1,12 +1,14 @@
 #include <glad/glad.h>
 // Glad needs to be before GLFW
-#include "shader.h"
 #include <GLFW/glfw3.h>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
 #include "cglm/cglm.h"
+
+#include "camera.h"
+#include "shader.h"
 
 #include <math.h>
 #include <stdbool.h>
@@ -16,6 +18,8 @@
 #define WINDOW_HEIGHT 600
 #define NUM_CUBES 10
 
+struct camera cam;
+
 // Callback from GLFW that the window was resized
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
@@ -23,62 +27,66 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
     glViewport(0, 0, width, height);
 }
 
-void processInput(GLFWwindow* window, float* sampleRatio,
-    struct shader* const s, vec3* camera_position, vec3 camera_front,
-    vec3 camera_up)
+// Calback from GLFW that mouse has moved
+void mouse_callback(GLFWwindow* window, double xpos, double ypos)
+{
+    static float last_x;
+    static float last_y;
+
+    // This will NOT be set back to true every time
+    static bool first_mouse = true;
+
+    if (first_mouse) {
+        first_mouse = false;
+        last_x = xpos;
+        last_y = ypos;
+    }
+    (void)window;
+    float xoffset = xpos - last_x;
+    float yoffset = ypos - last_y;
+
+    last_x = xpos;
+    last_y = ypos;
+
+    camera_process_mouse_movement(&cam, xoffset, yoffset);
+}
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
+{
+    (void)window;
+    (void)xoffset;
+    camera_process_scroll(&cam, yoffset);
+}
+
+void process_input(GLFWwindow* window, float* sample_ratio,
+    struct shader* const s, struct camera* const cam, float delta_time)
 {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
         glfwSetWindowShouldClose(window, true);
     }
     if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
-        if (*sampleRatio < 1.0) {
-            *sampleRatio = *sampleRatio + 0.01;
-            glUniform1f(glGetUniformLocation(s->ID, "sampleRatio"),
-                *sampleRatio);
+        if (*sample_ratio < 1.0) {
+            *sample_ratio = *sample_ratio + 0.01;
+            shader_set_float(s, "sampleRatio", *sample_ratio);
         }
     }
     if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
-        if (*sampleRatio > 0) {
-            *sampleRatio = *sampleRatio - 0.01;
-            glUniform1f(glGetUniformLocation(s->ID, "sampleRatio"),
-                *sampleRatio);
+        if (*sample_ratio > 0) {
+            *sample_ratio = *sample_ratio - 0.01;
+            shader_set_float(s, "sampleRatio", *sample_ratio);
         }
     }
     // Controll camera
-    const float camera_speed = 0.1f;
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
-        vec3 speed_camera_front;
-        glm_vec3_scale(camera_front, camera_speed, speed_camera_front);
-
-        glm_vec3_add(*camera_position, speed_camera_front, *camera_position);
+        camera_process_keyboard(cam, FORWARD, delta_time);
     }
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
-        vec3 speed_camera_front;
-        glm_vec3_scale(camera_front, camera_speed, speed_camera_front);
-
-        glm_vec3_sub(*camera_position, speed_camera_front, *camera_position);
+        camera_process_keyboard(cam, BACKWARD, delta_time);
     }
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
-        // Get camera right
-        vec3 camera_right;
-        glm_vec3_cross(camera_front, camera_up, camera_right);
-        glm_normalize(camera_right);
-
-        vec3 speed_camera_front;
-        glm_vec3_scale(camera_right, camera_speed, speed_camera_front);
-
-        glm_vec3_sub(*camera_position, speed_camera_front, *camera_position);
+        camera_process_keyboard(cam, LEFT, delta_time);
     }
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
-        // Get camera right
-        vec3 camera_right;
-        glm_vec3_cross(camera_front, camera_up, camera_right);
-        glm_normalize(camera_right);
-
-        vec3 speed_camera_front;
-        glm_vec3_scale(camera_right, camera_speed, speed_camera_front);
-
-        glm_vec3_add(*camera_position, speed_camera_front, *camera_position);
+        camera_process_keyboard(cam, RIGHT, delta_time);
     }
 }
 GLFWwindow* setupWindow()
@@ -100,11 +108,16 @@ GLFWwindow* setupWindow()
 
     glfwMakeContextCurrent(window);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+    glfwSetCursorPosCallback(window, mouse_callback);
+    glfwSetScrollCallback(window, scroll_callback);
 
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
         printf("Failed to initialize GLAD\n");
         return NULL;
     }
+
+    // Lock mouse
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     return window;
 }
@@ -166,36 +179,6 @@ unsigned int createTexture(unsigned int VAO, char* const image_path,
 
     stbi_image_free(data);
     return texture;
-}
-void project_3d(struct shader const* s, vec3 position, bool rotate,
-    vec3 camera_position, vec3 camera_front, vec3 camera_up)
-{
-    // Time to go 3D, ya heard?
-    mat4 model = GLM_MAT4_IDENTITY_INIT;
-    glm_translate(model, position);
-    if (rotate) {
-        vec3 rotate_vector = { 0.5f, 1.0f, 0.0f };
-        glm_rotate(model, (float)glfwGetTime() * glm_rad(50.0f), rotate_vector);
-    }
-
-    // Camera shit
-    vec3 dir;
-    glm_vec3_add(camera_position, camera_front, dir);
-
-    mat4 view;
-    glm_lookat(camera_position, dir, camera_up, view);
-
-    mat4 projection;
-    glm_perspective(glm_rad(45.0f), 800.0f / 600.0f, 0.1f, 100.0f, projection);
-
-    int model_loc = glGetUniformLocation(s->ID, "model");
-    glUniformMatrix4fv(model_loc, 1, GL_FALSE, (float*)model);
-
-    int view_loc = glGetUniformLocation(s->ID, "view");
-    glUniformMatrix4fv(view_loc, 1, GL_FALSE, (float*)view);
-
-    int projection_loc = glGetUniformLocation(s->ID, "projection");
-    glUniformMatrix4fv(projection_loc, 1, GL_FALSE, (float*)projection);
 }
 
 int main(void)
@@ -281,27 +264,28 @@ int main(void)
         return 1;
     }
 
+    // Initialize camera
+    camera_init(&cam);
+
     struct shader s;
-    shaderInit(&s, "../src/shader.vs", "../src/shader.fs");
+    shader_init(&s, "../src/shader.vs", "../src/shader.fs");
 
     glBindVertexArray(VAO);
     glUseProgram(s.ID);
     glUniform1i(glGetUniformLocation(s.ID, "texture1"), 0);
     glUniform1i(glGetUniformLocation(s.ID, "texture2"), 1);
-    float sampleRatio = 0.5;
-    glUniform1f(glGetUniformLocation(s.ID, "sampleRatio"), sampleRatio);
+
+    float sample_ratio = 0.5;
+    shader_set_float(&s, "sampleRatio", sample_ratio);
 
     glEnable(GL_DEPTH_TEST);
 
-    // Sent to camera in first iteration
-    vec3 camera_position = { 0.0f, 0.0f, 3.0f };
-    vec3 camera_front = { 0.0f, 0.0f, -1.0f };
-    vec3 camera_up = GLM_YUP;
+    float delta_time = 0.0f;
+    float last_frame = 0.0f;
 
     // Render loop:
     while (!glfwWindowShouldClose(window)) {
-        processInput(window, &sampleRatio, &s, &camera_position, camera_front,
-            camera_up);
+        process_input(window, &sample_ratio, &s, &cam, delta_time);
 
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -312,16 +296,36 @@ int main(void)
         glBindTexture(GL_TEXTURE_2D, texture2);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
 
+        // Pass projection matrix to shader
+        mat4 projection;
+        glm_perspective(glm_rad(cam.fov),
+            (float)WINDOW_WIDTH / (float)WINDOW_HEIGHT, 0.1f, 100.0f,
+            projection);
+        shader_set_mat4(&s, "projection", projection);
+
+        // Camera view transformation
+        mat4 view;
+        camera_get_view_matrix(&cam, view);
+        shader_set_mat4(&s, "view", view);
+
         glBindVertexArray(VAO);
         for (int i = 0; i < NUM_CUBES; i++) {
-            bool rotate = i % 3 == 0;
-            project_3d(&s, cube_positions[i], rotate, camera_position, camera_front,
-                camera_up);
+            mat4 model = GLM_MAT4_IDENTITY_INIT;
+            glm_translate(model, cube_positions[i]);
+            vec3 rotate_vector = { 0.5f, 1.0f, 0.0f };
+            glm_rotate(model, (float)glfwGetTime() * glm_rad(50.0f),
+                rotate_vector);
+            shader_set_mat4(&s, "model", model);
+
             glDrawArrays(GL_TRIANGLES, 0, 36);
         }
 
         glfwSwapBuffers(window);
         glfwPollEvents();
+
+        float current_frame = glfwGetTime();
+        delta_time = current_frame - last_frame;
+        last_frame = current_frame;
     }
     glDeleteVertexArrays(1, &VAO);
     glfwTerminate();

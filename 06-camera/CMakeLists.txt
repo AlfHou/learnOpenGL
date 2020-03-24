@@ -7,10 +7,11 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 
 set(SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
-set(SOURCE "${SRC_DIR}/main.c")
-add_executable(${PROJECT_NAME} "${SRC_DIR}/main.c" "${SRC_DIR}/shader.c")
+set(SOURCE "${SRC_DIR}/main.c" "${SRC_DIR}/shader.c" "${SRC_DIR}/camera.c")
+add_executable(${PROJECT_NAME} "${SOURCE}" )
 
-target_compile_options(${PROJECT_NAME} PUBLIC -g -Wall -Werror -Wextra)
+target_compile_options(${PROJECT_NAME} PUBLIC -g -Wall -Werror -Wextra
+    -pedantic)
 
 set(LIB_DIR "${CMAKE_CURRENT_SOURCE_DIR}/Dependencies")
 
