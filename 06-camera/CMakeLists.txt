@@ -18,9 +18,9 @@ set(LIB_DIR "${CMAKE_CURRENT_SOURCE_DIR}/Dependencies")
 
 # GLFW
 set(GLFW_DIR "${LIB_DIR}/glfw")
-set(GLFW_BUILD_EXAMPLES OFF CACHE INTERNAL "Build the GLFW example programs")
-set(GLFW_BUILD_TESTS OFF CACHE INTERNAL "Build the GLFW test programs")
-set(GLFW_BUILD_DOCS OFF CACHE INTERNAL "Build the GLFW documentation")
+set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE )
+set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set(GLFW_INSTALL OFF CACHE INTERNAL "Generate installation target")
 target_link_libraries(${PROJECT_NAME} "glfw" "${GLFW_LIBRARIES}")
 target_include_directories(${PROJECT_NAME} PRIVATE "${GLFW_DIR}/include"
