@@ -112,7 +112,7 @@ GLFWwindow* setupWindow()
 
     return window;
 }
-struct vao_and_vbo createShape(float* vertices, unsigned long sizeVertices)
+struct vao_and_vbo create_shape(float* vertices, unsigned long sizeVertices)
 {
     // Create Vertex Array Object
     unsigned int VAO;
@@ -133,9 +133,13 @@ struct vao_and_vbo createShape(float* vertices, unsigned long sizeVertices)
 
     // Specify how opengl should interpret our verticies
     // position
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float),
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float),
             (void*)0);
     glEnableVertexAttribArray(0);
+
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float),
+            (void*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
 
     struct vao_and_vbo ret = {
         .VAO = VAO,
@@ -144,7 +148,7 @@ struct vao_and_vbo createShape(float* vertices, unsigned long sizeVertices)
     return ret;
 }
 
-unsigned int createLight(unsigned int VBO)
+unsigned int create_light(unsigned int VBO)
 {
     unsigned int lightVAO;
     glGenVertexArrays(1, &lightVAO);
@@ -155,7 +159,7 @@ unsigned int createLight(unsigned int VBO)
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
     // Set the vertex attributes (only position data for our lamp)
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
     return lightVAO;
 }
@@ -169,55 +173,55 @@ int main(void)
 
     // Cube
     float vertices[] = {
-        -0.5f, -0.5f, -0.5f,
-        0.5f, -0.5f, -0.5f,
-        0.5f, 0.5f, -0.5f,
-        0.5f, 0.5f, -0.5f,
-        -0.5f, 0.5f, -0.5f,
-        -0.5f, -0.5f, -0.5f,
+        -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+        0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+        0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+        0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+        -0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
 
-        -0.5f, -0.5f, 0.5f,
-        0.5f, -0.5f, 0.5f,
-        0.5f, 0.5f, 0.5f,
-        0.5f, 0.5f, 0.5f,
-        -0.5f, 0.5f, 0.5f,
-        -0.5f, -0.5f, 0.5f,
+        -0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+        0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+        0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+        0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+        -0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+        -0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
 
-        -0.5f, 0.5f, 0.5f,
-        -0.5f, 0.5f, -0.5f,
-        -0.5f, -0.5f, -0.5f,
-        -0.5f, -0.5f, -0.5f,
-        -0.5f, -0.5f, 0.5f,
-        -0.5f, 0.5f, 0.5f,
+        -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+        -0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
+        -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
+        -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
+        -0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+        -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
 
-        0.5f, 0.5f, 0.5f,
-        0.5f, 0.5f, -0.5f,
-        0.5f, -0.5f, -0.5f,
-        0.5f, -0.5f, -0.5f,
-        0.5f, -0.5f, 0.5f,
-        0.5f, 0.5f, 0.5f,
+        0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+        0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
+        0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
+        0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
+        0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+        0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
 
-        -0.5f, -0.5f, -0.5f,
-        0.5f, -0.5f, -0.5f,
-        0.5f, -0.5f, 0.5f,
-        0.5f, -0.5f, 0.5f,
-        -0.5f, -0.5f, 0.5f,
-        -0.5f, -0.5f, -0.5f,
+        -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+        0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+        0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+        0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+        -0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
 
-        -0.5f, 0.5f, -0.5f,
-        0.5f, 0.5f, -0.5f,
-        0.5f, 0.5f, 0.5f,
-        0.5f, 0.5f, 0.5f,
-        -0.5f, 0.5f, 0.5f,
-        -0.5f, 0.5f, -0.5f,
+        -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
+        0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
+        0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+        0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+        -0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+        -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f
     };
 
     vec3 cube_positions[] = {
         { 0.0f, 0.0f, 0.0f }
     };
 
-    struct vao_and_vbo shape = createShape(vertices, sizeof(vertices));
-    unsigned int lightVAO = createLight(shape.VBO);
+    struct vao_and_vbo shape = create_shape(vertices, sizeof(vertices));
+    unsigned int lightVAO = create_light(shape.VBO);
 
 
     // Initialize camera
@@ -238,9 +242,11 @@ int main(void)
 
 
     vec3 object_color_vector = {1.0f, 0.5f, 0.31f};
-    shader_set_vec3(&s, "objectColor", object_color_vector);
+    shader_set_vec3(&s, "object_color", object_color_vector);
     vec3 light_color_vector = GLM_VEC3_ONE_INIT;
-    shader_set_vec3(&s, "lightColor", light_color_vector);
+    shader_set_vec3(&s, "light_color", light_color_vector);
+
+    shader_set_vec3(&s, "light_position", light_pos);
 
     glEnable(GL_DEPTH_TEST);
 
@@ -253,7 +259,6 @@ int main(void)
 
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
 
         glUseProgram(s.ID);
         // Pass projection matrix to shader
@@ -276,6 +281,7 @@ int main(void)
             glm_rotate(model, (float)glfwGetTime() * glm_rad(50.0f),
                     rotate_vector);
             shader_set_mat4(&s, "model", model);
+            shader_set_vec3(&s, "view_position", cam.camera_position);
 
             glDrawArrays(GL_TRIANGLES, 0, 36);
         }

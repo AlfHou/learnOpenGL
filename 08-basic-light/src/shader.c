@@ -7,7 +7,7 @@
 /* Read shader from file. Returns char* to string version of
  * the shader. Needs to be freed when no longer in use. Returns null on error.
  */
-char* readShader(const char* path)
+char* read_shader(const char* path)
 {
     FILE* file;
     file = fopen(path, "r");
@@ -44,7 +44,7 @@ char* readShader(const char* path)
     return buffer;
 }
 
-unsigned int compileShader(const char* shader, const GLenum shaderType)
+unsigned int compile_shader(const char* shader, const GLenum shaderType)
 {
     unsigned int shaderId;
     shaderId = glCreateShader(shaderType);
@@ -101,34 +101,36 @@ void shader_set_vec3(struct shader* const s, char* const uniform_name, vec3 val)
     glUniform3fv(uniform_loc, 1, (float*)val);
 }
 
-void shader_init(struct shader* instance, const char* vertex_path,
-        const char* fragment_path)
+void shader_init(struct shader* instance, char const* vertex_path,
+        char const * fragment_path)
 {
-    char* vertexShaderBuffer = readShader(vertex_path);
-    if (vertexShaderBuffer == NULL) {
+
+    char* vertex_shader_buffer = read_shader(vertex_path);
+    if (vertex_shader_buffer == NULL) {
         return;
     }
 
-    unsigned int vertexShaderId = compileShader(vertexShaderBuffer,
+    unsigned int vertex_shader_id = compile_shader(vertex_shader_buffer,
             GL_VERTEX_SHADER);
-    free(vertexShaderBuffer);
+    free(vertex_shader_buffer);
 
     // Create fragment shader
-    char* fragmentShaderBuffer = readShader(fragment_path);
-    if (fragmentShaderBuffer == NULL) {
-        glDeleteShader(vertexShaderId);
+    char* fragment_shader_buffer = read_shader(fragment_path);
+    if (fragment_shader_buffer == NULL) {
+        glDeleteShader(vertex_shader_id);
         return;
     }
 
-    unsigned int fragmentShaderId = compileShader(fragmentShaderBuffer,
+    unsigned int fragment_shader_id = compile_shader(fragment_shader_buffer,
             GL_FRAGMENT_SHADER);
-    free(fragmentShaderBuffer);
+    free(fragment_shader_buffer);
 
-    unsigned int shaderProgramId = createShaderProgram(vertexShaderId,
-            fragmentShaderId);
+    unsigned int shaderProgramId = createShaderProgram(vertex_shader_id,
+            fragment_shader_id);
 
     instance->ID = shaderProgramId;
 
-    glDeleteShader(vertexShaderId);
-    glDeleteShader(fragmentShaderId);
+    glDeleteShader(vertex_shader_id);
+    glDeleteShader(fragment_shader_id);
 }
+

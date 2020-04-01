@@ -12,6 +12,10 @@ struct shader {
 void shader_init(struct shader* instance, const char* vertex_path,
         const char* fragment_path);
 
+// Compile shader program again. Allows for updating shaders without having to
+// compile entire program again
+void shader_reload(struct shader* instance);
+
 /* Set uniform 'uniformName' in shader 's' to value 'value'
 */
 void shader_set_float(struct shader* const s, char* const uniformName, float value);
