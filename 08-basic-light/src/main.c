@@ -246,7 +246,6 @@ int main(void)
     vec3 light_color_vector = GLM_VEC3_ONE_INIT;
     shader_set_vec3(&s, "light_color", light_color_vector);
 
-    shader_set_vec3(&s, "light_position", light_pos);
 
     glEnable(GL_DEPTH_TEST);
 
@@ -261,6 +260,8 @@ int main(void)
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         glUseProgram(s.ID);
+        shader_set_vec3(&s, "light_position", light_pos);
+
         // Pass projection matrix to shader
         mat4 projection;
         glm_perspective(glm_rad(cam.fov),
@@ -293,7 +294,12 @@ int main(void)
         shader_set_mat4(&light_source_shader, "view", view);
 
         mat4 model = GLM_MAT4_IDENTITY_INIT;
+
+        light_pos[0] = sin(glfwGetTime() * 10) * 5;
+        light_pos[1] = sin(glfwGetTime() * 3) * 4;
+        light_pos[2] = cos(glfwGetTime() * 10) * 5;
         glm_translate(model, light_pos);
+
         vec3 light_scale = {0.2f, 0.2f, 0.2f};
         glm_scale(model, light_scale);
         shader_set_mat4(&light_source_shader, "model", model);
