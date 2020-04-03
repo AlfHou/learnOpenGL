@@ -32,3 +32,7 @@ the binary created for hello_triangle would be `hello_triangle`.
 ### 3D cubes
 
 ![coordniate_system](https://user-images.githubusercontent.com/20001253/77314508-0f2c1500-6d06-11ea-8a6e-ab21c734f77c.png)
+
+### Lights
+
+![lights](https://user-images.githubusercontent.com/20001253/78369403-6adb8580-75c5-11ea-837e-a16fed5d8058.png)
