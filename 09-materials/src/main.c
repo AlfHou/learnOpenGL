@@ -245,9 +245,6 @@ int main(void)
     shader_set_vec3(&s, "material.specular", object_specular_vector);
     shader_set_float(&s, "material.shininess", 32.f);
 
-    vec3 light_color_vector = GLM_VEC3_ONE_INIT;
-    shader_set_vec3(&s, "light_color", light_color_vector);
-
     glEnable(GL_DEPTH_TEST);
 
     float delta_time = 0.0f;
@@ -261,7 +258,29 @@ int main(void)
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         glUseProgram(s.ID);
-        shader_set_vec3(&s, "light_position", light_pos);
+
+        // Set light color
+        vec3 light_color;
+        light_color[0] = sin(glfwGetTime() * 2.0f);
+        light_color[1] = sin(glfwGetTime() * 0.7f);
+        light_color[2] = sin(glfwGetTime() * 1.3f);
+
+        vec3 diffuse_color;
+        vec3 diffuse_factor = { 0.5f, 0.5f, 0.5f };
+        glm_vec3_mul(light_color, diffuse_factor, diffuse_color);
+
+        vec3 ambient_color;
+        vec3 ambient_factor;
+        glm_vec3_mul(diffuse_color, ambient_factor, ambient_color);
+
+        shader_set_vec3(&s, "light.ambient", ambient_color);
+
+        shader_set_vec3(&s, "light.diffuse", diffuse_color);
+
+        vec3 object_light_specular_vec = { 1.0f, 1.0f, 1.0f };
+        shader_set_vec3(&s, "light.specular", object_light_specular_vec);
+
+        shader_set_vec3(&s, "light.position", light_pos);
 
         // Pass projection matrix to shader
         mat4 projection;
