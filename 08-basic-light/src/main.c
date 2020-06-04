@@ -295,9 +295,9 @@ int main(void)
 
         mat4 model = GLM_MAT4_IDENTITY_INIT;
 
-        light_pos[0] = sin(glfwGetTime() * 10) * 5;
+        light_pos[0] = sin(glfwGetTime() * 1) * 5;
         light_pos[1] = sin(glfwGetTime() * 3) * 4;
-        light_pos[2] = cos(glfwGetTime() * 10) * 5;
+        light_pos[2] = cos(glfwGetTime() * 1) * 5;
         glm_translate(model, light_pos);
 
         vec3 light_scale = {0.2f, 0.2f, 0.2f};
